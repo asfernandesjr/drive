@@ -192,6 +192,7 @@ class UserViewSet(
     queryset = models.User.objects.all().filter(is_active=True)
     serializer_class = serializers.UserSerializer
     get_me_serializer_class = serializers.UserMeSerializer
+    contacts_serializer_class = serializers.UserLightSerializer
     pagination_class = None
     throttle_classes = []
 
@@ -251,6 +252,60 @@ class UserViewSet(
         """
         context = {"request": request}
         return drf.response.Response(self.get_serializer(request.user, context=context).data)
+
+    @drf.decorators.action(detail=False, methods=["get"], url_path="contacts")
+    def contacts(self, request):
+        """
+        Return the people involved in sharing with the current user, in either
+        direction, most frequent first.
+
+        A contact either holds an access on one of the user's items ("shared
+        with") or created one of them ("shared by"). Frequency is the number of
+        such items they hold an access on, so a contact's own private items do
+        not inflate their ranking.
+        """
+        user = request.user
+        # Restrict to live items the user has access to, directly or through a
+        # team, matching the contact filter perimeter so every returned contact
+        # yields at least one item.
+        shared_items = models.Item.objects.filter(
+            db.Q(accesses__user=user) | db.Q(accesses__team__in=user.teams),
+            hard_deleted_at__isnull=True,
+            ancestors_deleted_at__isnull=True,
+        )
+
+        shared_with = db.Q(itemaccess__item_id__in=shared_items.values("pk"))
+        shared_by = db.Q(pk__in=shared_items.values("creator_id"))
+        created_shared = db.Q(items_created__in=shared_items)
+        frequency = db.Count("itemaccess", filter=shared_with) + db.Count(
+            "items_created", filter=created_shared
+        )
+        contacts = (
+            models.User.objects.filter(is_active=True)
+            .filter(shared_with | shared_by)
+            .exclude(pk=user.pk)
+            .annotate(frequency=frequency)
+        )
+
+        if query := request.query_params.get("q", ""):
+            if "@" in query:
+                contacts = contacts.annotate(
+                    distance=RawSQL("levenshtein(email::text, %s::text)", (query,))
+                ).filter(distance__lte=3)
+                ordering = ("distance", "email")
+            else:
+                contacts = (
+                    contacts.filter(email__trigram_word_similar=query)
+                    .annotate(similarity=TrigramSimilarity("email", query))
+                    .filter(similarity__gt=0.2)
+                )
+                ordering = ("-similarity", "email")
+        else:
+            ordering = ("-frequency", "email")
+
+        contacts = contacts.order_by(*ordering)[: settings.API_USERS_LIST_LIMIT]
+
+        return drf.response.Response(self.get_serializer(contacts, many=True).data)
 
 
 class ItemMetadata(drf.metadata.SimpleMetadata):
