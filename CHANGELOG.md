@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - ✨(backend) allow converting a file while it is being analyzed
+- ✨(frontend) add file type, contact and modification date topbar filters
 
 ### Fixed
 
