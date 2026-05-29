@@ -689,9 +689,10 @@ class ItemViewSet(
             raise drf.exceptions.ValidationError(filterset.errors)
         filter_data = filterset.form.cleaned_data
 
-        # Filter as early as possible on fields that are available on the model
-        for field in ["is_creator_me", "title", "type"]:
-            queryset = filterset.filters[field].filter(queryset, filter_data[field])
+        # Filter early, excluding is_favorite whose annotation does not exist yet
+        for field in filterset.filters:
+            if field != "is_favorite":
+                queryset = filterset.filters[field].filter(queryset, filter_data[field])
         user = request.user
         queryset = queryset.annotate_user_roles(user)
 
