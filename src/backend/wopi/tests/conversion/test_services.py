@@ -341,6 +341,33 @@ def test_prepare_conversion_returns_placeholder_in_converting_state(settings):
     assert placeholder.parent().id == parent.id
 
 
+def test_prepare_conversion_accepts_analyzing_source(settings):
+    """Queue a conversion while the source is still being analyzed."""
+    _configure_wopi(settings)
+    user = factories.UserFactory()
+    item = _file(user, update_upload_state=models.ItemUploadStateChoices.ANALYZING)
+
+    placeholder = services.prepare_conversion(item, user)
+
+    assert placeholder.upload_state == models.ItemUploadStateChoices.CONVERTING
+
+
+def test_perform_conversion_rejects_analyzing_source(settings):
+    """Never convert the bytes before analysis confirmed the source is safe."""
+    _configure_wopi(settings)
+    user = factories.UserFactory()
+    item = _file(user, update_upload_state=models.ItemUploadStateChoices.ANALYZING)
+    placeholder = factories.ItemFactory(
+        users=[(user, models.RoleChoices.EDITOR)],
+        type=models.ItemTypeChoices.FILE,
+        filename="document.docx",
+        update_upload_state=models.ItemUploadStateChoices.CONVERTING,
+    )
+
+    with pytest.raises(exceptions.ConversionRejected, match="not ready"):
+        services.perform_conversion(item, placeholder, user)
+
+
 def test_prepare_conversion_rejects_unsupported_extensions(settings):
     """Skip placeholder creation for files that cannot be converted."""
     _configure_wopi(settings)

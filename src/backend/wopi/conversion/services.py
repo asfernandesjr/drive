@@ -23,12 +23,15 @@ from wopi.conversion.source_url import build_source_url
 MIME_SNIFF_BYTES = 2048
 
 
-def _validate_conversion(item, user):
+def _validate_conversion(item, user, require_ready=True):
     """Run pre-flight checks and return the target extension and client options."""
     if item.type != models.ItemTypeChoices.FILE:
         raise ConversionRejected("Source item is not a file.")
 
-    if item.upload_state != models.ItemUploadStateChoices.READY:
+    ready_states = [models.ItemUploadStateChoices.READY]
+    if not require_ready:
+        ready_states.append(models.ItemUploadStateChoices.ANALYZING)
+    if item.upload_state not in ready_states:
         raise ConversionRejected("Source item is not ready.")
 
     if not item.get_abilities(user).get("update"):
@@ -95,7 +98,7 @@ def prepare_conversion(source_item, user):
     UI can display the converting state right away. The actual OnlyOffice
     conversion happens later in a celery task.
     """
-    target_extension, _ = _validate_conversion(source_item, user)
+    target_extension, _ = _validate_conversion(source_item, user, require_ready=False)
     parent = _resolve_destination_parent(source_item, user)
     target_filename = _target_filename(source_item, target_extension, parent, user)
 
