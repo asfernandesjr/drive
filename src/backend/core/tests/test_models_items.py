@@ -238,6 +238,19 @@ def test_models_items_get_abilities_convert(extension, expected, settings):
     assert item.get_abilities(user)["convert"] is expected
 
 
+def test_models_items_get_abilities_convert_while_analyzing(settings):
+    """Flag convert while malware analysis is still running on the source."""
+    settings.WOPI_ONLYOFFICE_CONVERT_JWT_SECRET = "test-jwt-secret"
+    user = factories.UserFactory()
+    item = factories.ItemFactory(
+        users=[(user, "editor")],
+        type=models.ItemTypeChoices.FILE,
+        filename="file.doc",
+        update_upload_state=models.ItemUploadStateChoices.ANALYZING,
+    )
+    assert item.get_abilities(user)["convert"] is True
+
+
 def test_models_items_get_abilities_convert_disabled_without_jwt_secret(settings):
     """Disable convert ability when the JWT secret is not configured."""
     settings.WOPI_ONLYOFFICE_CONVERT_JWT_SECRET = None

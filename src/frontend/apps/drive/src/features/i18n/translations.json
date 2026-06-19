@@ -490,7 +490,8 @@
               "content": "This file needs to be converted before it can be edited. A copy will be created: your original file stays untouched.",
               "cancel": "Cancel",
               "confirm": "Convert",
-              "error": "Conversion failed. Please try again."
+              "error": "Conversion failed. Please try again.",
+              "analyzing_notice": "This file is still being analyzed for malware. The conversion will start automatically once the analysis is complete."
             }
           }
         },
@@ -1101,7 +1102,8 @@
               "content": "Ce fichier nécessite une conversion pour être édité. Une copie sera créée : votre fichier original reste intact.",
               "cancel": "Annuler",
               "confirm": "Convertir",
-              "error": "La conversion a échoué. Veuillez réessayer."
+              "error": "La conversion a échoué. Veuillez réessayer.",
+              "analyzing_notice": "Ce fichier est encore en cours d'analyse antivirus. La conversion démarrera automatiquement une fois l'analyse terminée."
             }
           }
         },
@@ -1706,7 +1708,8 @@
               "content": "Dit bestand moet worden geconverteerd om te kunnen bewerken. Er wordt een kopie gemaakt: uw originele bestand blijft ongewijzigd.",
               "cancel": "Annuleren",
               "confirm": "Converteren",
-              "error": "Conversie mislukt. Probeer het opnieuw."
+              "error": "Conversie mislukt. Probeer het opnieuw.",
+              "analyzing_notice": "Dit bestand wordt nog gecontroleerd op malware. De conversie start automatisch zodra de analyse is voltooid."
             }
           }
         },

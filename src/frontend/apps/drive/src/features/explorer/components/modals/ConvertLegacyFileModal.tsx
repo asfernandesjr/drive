@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Modal, ModalSize } from "@gouvfr-lasuite/cunningham-react";
 import { useTranslation } from "react-i18next";
-import { Item } from "@/features/drivers/types";
+import { Item, ItemUploadState } from "@/features/drivers/types";
 import { useMutationConvertItem } from "@/features/explorer/hooks/useMutations";
 
 type Props = {
@@ -58,7 +58,12 @@ export const ConvertLegacyFileModal = ({ item, isOpen, onClose }: Props) => {
         {error ? (
           <p className="clr-error-500">{error}</p>
         ) : (
-          t("explorer.actions.convert.modal.content")
+          <>
+            {t("explorer.actions.convert.modal.content")}
+            {item.upload_state === ItemUploadState.ANALYZING && (
+              <p>{t("explorer.actions.convert.modal.analyzing_notice")}</p>
+            )}
+          </>
         )}
       </div>
     </Modal>
