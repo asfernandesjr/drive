@@ -1,5 +1,4 @@
 import {
-  Button,
   Modal,
   ModalProps,
   ModalSize,
@@ -11,6 +10,7 @@ import {
   QuickSearch,
   QuickSearchGroup,
   QuickSearchItemTemplate,
+  SmartScroller,
 } from "@gouvfr-lasuite/ui-kit";
 import { useEffect, useRef, useState } from "react";
 import { Item, ItemType } from "@/features/drivers/types";
@@ -159,7 +159,7 @@ export const ExplorerSearchModal = (props: ExplorerSearchModalProps) => {
           loading={loading}
           placeholder={t("explorer.search.modal.placeholder")}
         >
-          <div className="explorer__search__modal__filters">
+          <SmartScroller className="explorer__search__modal__filters">
             <div className="explorer__search__modal__filters__inputs">
               <ExplorerFilterLocation
                 value={filters?.location ?? null}
@@ -181,19 +181,7 @@ export const ExplorerSearchModal = (props: ExplorerSearchModalProps) => {
                 onChange={onModifiedChange}
               />
             </div>
-
-            <div>
-              {Object.keys(filters).length > 0 && (
-                <Button
-                  variant="tertiary"
-                  size="small"
-                  onClick={() => setFilters({})}
-                >
-                  {t("explorer.search.modal.filters.reset")}
-                </Button>
-              )}
-            </div>
-          </div>
+          </SmartScroller>
           {items.length > 0 && (
             <div className="explorer__search__modal__items__container">
               <div className="explorer__search__modal__items">
