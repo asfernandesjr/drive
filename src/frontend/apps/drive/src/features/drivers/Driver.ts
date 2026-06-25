@@ -140,7 +140,7 @@ export abstract class Driver {
 
   // Users
   abstract getUsers(filters?: UserFilters): Promise<User[]>;
-  abstract getContacts(): Promise<UserLight[]>;
+  abstract getContacts(filters?: UserFilters): Promise<UserLight[]>;
   abstract updateUser(payload: Partial<User> & { id: string }): Promise<User>;
   // Tree
   abstract getTree(id: string): Promise<Item>;

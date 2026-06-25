@@ -16,12 +16,15 @@ export const useUsers = (
   });
 };
 
-export const useContacts = (options?: HookUseQueryOptions<UserLight[]>) => {
+export const useContacts = (
+  filters?: UserFilters,
+  options?: HookUseQueryOptions<UserLight[]>
+) => {
   const driver = getDriver();
 
   return useQuery({
     ...options,
-    queryKey: ["contacts"],
-    queryFn: () => driver.getContacts(),
+    queryKey: ["contacts", filters],
+    queryFn: () => driver.getContacts(filters),
   });
 };

@@ -110,8 +110,10 @@ export class StandardDriver extends Driver {
     return data;
   }
 
-  async getContacts(): Promise<UserLight[]> {
-    const response = await fetchAPI(`users/contacts/`);
+  async getContacts(filters?: UserFilters): Promise<UserLight[]> {
+    const response = await fetchAPI(`users/contacts/`, {
+      params: filters,
+    });
     const data = await response.json();
     return data;
   }

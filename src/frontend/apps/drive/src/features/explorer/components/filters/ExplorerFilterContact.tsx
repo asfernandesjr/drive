@@ -2,11 +2,12 @@ import { SearchFilter, SearchUserItem } from "@gouvfr-lasuite/ui-kit";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserLight } from "@/features/drivers/types";
-import { useContacts, useUsers } from "@/features/users/hooks/useUserQueries";
+import { useContacts } from "@/features/users/hooks/useUserQueries";
 
 const CONTACT_RESET = "__contact_reset__";
 
-const contactLabel = (user: UserLight) =>  user.full_name || user.short_name || "";
+const contactLabel = (user: UserLight) =>
+  user.full_name || user.short_name || "";
 
 type ContactItem = { id: string; label: string; user?: UserLight };
 
@@ -15,40 +16,22 @@ export const ExplorerFilterContact = (props: {
   onChange: (value: string | null) => void;
 }) => {
   const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const isSearching = search.length >= 5;
-  const { data: contacts, isLoading: isLoadingContacts } = useContacts({
-    enabled: !isSearching,
-  });
-  const { data: results, isLoading: isLoadingResults } = useUsers(
+  // The query only runs while the popover is open so navigating folders does
+  // not trigger contact requests the user never asked for. The backend handles
+  // the search through the `q` param, so there is no local filtering anymore.
+  const { data: contacts, isLoading } = useContacts(
     { q: search },
-    { enabled: isSearching },
+    { enabled: isOpen },
   );
 
-  // Below the search threshold, filter the frequent contacts locally so the
-  // displayed list always matches what the user typed.
-  const users = useMemo(() => {
-    if (isSearching) {
-      return results ?? [];
-    }
-    const list = contacts ?? [];
-    if (!search) {
-      return list;
-    }
-    const query = search.toLowerCase();
-    return list.filter((user) =>
-      contactLabel(user).toLowerCase().includes(query),
-    );
-  }, [isSearching, results, contacts, search]);
+  const users = contacts ?? [];
 
   // Derive the active label from the loaded data so it survives a remount,
-  // where local state would be lost while the filter value persists. A contact
-  // picked through global search and absent from the frequent list still loses
-  // its label after a remount; the filter itself stays active.
-  const activeContact =
-    contacts?.find((user) => user.id === props.value) ??
-    results?.find((user) => user.id === props.value);
+  // where local state would be lost while the filter value persists.
+  const activeContact = users.find((user) => user.id === props.value);
 
   // Reset is always present so the list height does not change on selection,
   // which the popover would not recompute (it would clip the last row).
@@ -70,16 +53,16 @@ export const ExplorerFilterContact = (props: {
 
   return (
     <SearchFilter<ContactItem>
+      isOpen={isOpen}
+      onOpenChange={setIsOpen}
       label={t("explorer.filters.contact.label")}
-      activeLabel={
-        activeContact ? contactLabel(activeContact) : undefined
-      }
+      activeLabel={activeContact ? contactLabel(activeContact) : undefined}
       isActive={!!props.value}
       placeholder={t("explorer.filters.contact.placeholder")}
       searchValue={search}
       onSearchChange={setSearch}
       items={items}
-      isLoading={isSearching ? isLoadingResults : isLoadingContacts}
+      isLoading={isLoading}
       emptyState={t("explorer.filters.contact.empty")}
       renderItem={(item) =>
         item.id === CONTACT_RESET ? (
@@ -91,7 +74,9 @@ export const ExplorerFilterContact = (props: {
           <div className="explorer__filters__contact">
             <SearchUserItem user={{ ...item.user!, email: "" }} />
             {item.id === props.value && (
-              <span className="material-icons explorer__filters__check">check</span>
+              <span className="material-icons explorer__filters__check">
+                check
+              </span>
             )}
           </div>
         )
