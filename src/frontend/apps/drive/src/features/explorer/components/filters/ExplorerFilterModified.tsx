@@ -1,5 +1,5 @@
 import { Filter, FilterOption } from "@gouvfr-lasuite/ui-kit";
-import { DateRangePicker } from "@gouvfr-lasuite/cunningham-react";
+import { CalendarRange } from "@gouvfr-lasuite/cunningham-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Key } from "react-aria-components";
@@ -25,20 +25,18 @@ export const ExplorerFilterModified = (props: {
 }) => {
   const { t } = useTranslation();
   const [preset, setPreset] = useState<Key | null>(null);
-  const [isCustom, setIsCustom] = useState(false);
+  const [range, setRange] = useState<DateRange | null>(null);
 
-  // Reset the local selection when the range is cleared from outside (e.g. the
-  // modal's global reset). Track the transition to empty so picking "custom",
-  // which leaves the range empty until dates are chosen, is not cancelled.
-  const previousValue = useRef(props.value);
+  // Reset the local selection when the range is cleared from outside ( top down ).
   useEffect(() => {
-    const wasSet = previousValue.current;
-    previousValue.current = props.value;
-    if (wasSet && !props.value) {
+    if (!props.value) {
       setPreset(null);
-      setIsCustom(false);
+      setRange(null);
     }
   }, [props.value]);
+
+  const onChangeRef = useRef(props.onChange);
+  onChangeRef.current = props.onChange;
 
   const options: FilterOption[] = useMemo(
     () => [
@@ -53,62 +51,65 @@ export const ExplorerFilterModified = (props: {
         ),
       })),
       {
-        label: t("explorer.filters.modified.options.custom"),
+        label: range
+          ? `${range.updated_at_after} - ${range.updated_at_before}`
+          : t("explorer.filters.modified.options.custom"),
         value: MODIFIED_CUSTOM,
         render: () => (
           <div className="explorer__filters__item">
-            {t("explorer.filters.modified.options.custom")}
+            {range
+              ? `${range.updated_at_after} - ${range.updated_at_before}`
+              : t("explorer.filters.modified.options.custom")}
           </div>
+        ),
+        subContent: ({ select, close }) => (
+          <CalendarRange
+            onChange={(range) => {
+              const rangeFormatted =
+                range?.start && range?.end
+                  ? {
+                      updated_at_after: range.start.toString(),
+                      updated_at_before: range.end.toString(),
+                    }
+                  : null;
+              onChangeRef.current(rangeFormatted);
+              setRange(rangeFormatted);
+              select();
+            }}
+            onOk={() => {
+              select();
+              close();
+            }}
+            onCancel={close}
+          />
         ),
       },
     ],
-    [t],
+    [t, range],
   );
 
   const onSelectionChange = (key: Key | null) => {
     if (key === ALL) {
       setPreset(null);
-      setIsCustom(false);
+      setRange(null);
       props.onChange(null);
       return;
     }
     if (key === MODIFIED_CUSTOM) {
       setPreset(key);
-      setIsCustom(true);
       return;
     }
     setPreset(key);
-    setIsCustom(false);
+    setRange(null);
     props.onChange(presetRange(key as DatePreset));
   };
 
   return (
-    <>
-      <Filter
-        label={t("explorer.filters.modified.label")}
-        options={options}
-        selectedKey={preset}
-        onSelectionChange={onSelectionChange}
-      />
-      {isCustom && (
-        <DateRangePicker
-          compact
-          hideLabel
-          startLabel={t("explorer.filters.modified.start")}
-          endLabel={t("explorer.filters.modified.end")}
-          onChange={(range) =>
-            // The picker emits ISO datetimes; the backend wants date-only bounds.
-            props.onChange(
-              range
-                ? {
-                    updated_at_after: range[0].slice(0, 10),
-                    updated_at_before: range[1].slice(0, 10),
-                  }
-                : null,
-            )
-          }
-        />
-      )}
-    </>
+    <Filter
+      label={t("explorer.filters.modified.label")}
+      options={options}
+      value={preset}
+      onChange={onSelectionChange}
+    />
   );
 };
