@@ -48,7 +48,7 @@ test.describe("Silent Login", () => {
 
     // Verify user is logged in
     await expect(
-      page.getByRole("button", { name: "Open user menu" })
+      page.getByRole("button", { name: "User menu" })
     ).toBeVisible({ timeout: 10000 });
 
     // Step 2: Clear only the Django session cookie (keep Keycloak session)
@@ -173,7 +173,7 @@ test.describe("Silent Login", () => {
 
     // Step 2: Verify user is logged in
     await expect(
-      page.getByRole("button", { name: "Open user menu" })
+      page.getByRole("button", { name: "User menu" })
     ).toBeVisible({ timeout: 10000 });
 
     // Step 3: Mock config API to enable silent login
@@ -193,7 +193,7 @@ test.describe("Silent Login", () => {
 
     // Step 6: Verify user is still logged in (no redirect to login page)
     await expect(
-      page.getByRole("button", { name: "Open user menu" })
+      page.getByRole("button", { name: "User menu" })
     ).toBeVisible({ timeout: 10000 });
 
     // Step 7: Verify no silent login redirect was attempted
