@@ -191,6 +191,16 @@ class SearchItemFilter(ItemFilter):
         """
         return queryset
 
+    def filter_category(self, queryset, name, value):
+        """
+        Filter files by file type category, excluding folders.
+
+        Unlike the explorer listings, a search is not a navigation: folders have no
+        file type and would only add noise to the results.
+        """
+        queryset = super().filter_category(queryset, name, value)
+        return queryset.exclude(type=models.ItemTypeChoices.FOLDER)
+
     def filter_scope(self, queryset, name, value):
         """Filter items based on their scopes."""
         to_filter = Q()

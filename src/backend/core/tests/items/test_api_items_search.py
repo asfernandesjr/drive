@@ -784,3 +784,44 @@ def test_api_items_search_excludes_pending_items():
     result_ids = [r["id"] for r in response.json()["results"]]
     assert str(ready_file.id) in result_ids
     assert len(result_ids) == 1
+
+
+def test_api_items_search_filter_category_excludes_folders():
+    """Searching by a file type category should not return folders."""
+    user = factories.UserFactory()
+    client = APIClient()
+    client.force_login(user)
+
+    workspace = factories.ItemFactory(
+        title="Workspace",
+        creator=user,
+        users=[(user, models.RoleChoices.OWNER)],
+        type=models.ItemTypeChoices.FOLDER,
+    )
+    factories.ItemFactory(
+        title="Reports",
+        parent=workspace,
+        creator=user,
+        type=models.ItemTypeChoices.FOLDER,
+    )
+    spreadsheet = factories.ItemFactory(
+        title="Data",
+        filename="data.xlsx",
+        parent=workspace,
+        creator=user,
+        type=models.ItemTypeChoices.FILE,
+        update_upload_state=models.ItemUploadStateChoices.READY,
+    )
+    factories.ItemFactory(
+        title="Report",
+        filename="report.pdf",
+        parent=workspace,
+        creator=user,
+        type=models.ItemTypeChoices.FILE,
+        update_upload_state=models.ItemUploadStateChoices.READY,
+    )
+
+    response = client.get("/api/v1.0/items/search/?category=calc")
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()["results"]] == [str(spreadsheet.id)]

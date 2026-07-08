@@ -16,6 +16,7 @@ and this project adheres to
 
 ### Fixed
 
+- 🐛(backend) exclude folders from file type search results
 - 🐛(frontend) keep uploaded items usable while malware analysis runs
 - 🐛(backend) stream export files from S3 without buffering
 
