@@ -32,9 +32,8 @@ export const ExplorerFilterCategory = (props: {
   const { t } = useTranslation();
 
   const options: FilterOption[] = useMemo(
-    () => [
-      // Reset sits at the top of the list, above the categories, as in the design.
-      ...CATEGORY_OPTIONS.map(({ value, mimetype }) => ({
+    () =>
+      CATEGORY_OPTIONS.map(({ value, mimetype }) => ({
         label: t(`explorer.filters.category.options.${value}`),
         value,
         render: () => (
@@ -48,7 +47,6 @@ export const ExplorerFilterCategory = (props: {
           </div>
         ),
       })),
-    ],
     [t],
   );
 
